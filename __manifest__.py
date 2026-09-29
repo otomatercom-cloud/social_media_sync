@@ -36,6 +36,7 @@ Social Media Sync
             'social_media_sync/static/src/js/dashboard.js',
         ],
     },
+    'pre_init_hook': 'pre_init_hook',
     'installable': True,
     'application': True,
     'auto_install': False,

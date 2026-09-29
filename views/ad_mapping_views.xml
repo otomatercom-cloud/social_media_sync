@@ -191,12 +191,11 @@
                 <field name="source_campaign_id"/>
                 <filter name="active" string="Active" domain="[('active','=',True)]"/>
                 <filter name="inactive" string="Archived" domain="[('active','=',False)]"/>
-                <group expand="0" string="Group By">
-                    <filter name="group_campaign" string="Campaign"
-                            context="{'group_by': 'campaign_id'}"/>
-                    <filter name="group_adset" string="Ad Set"
-                            context="{'group_by': 'adset_id'}"/>
-                </group>
+                <separator/>
+                <filter name="group_campaign" string="Campaign"
+                        context="{'group_by': 'campaign_id'}"/>
+                <filter name="group_adset" string="Ad Set"
+                        context="{'group_by': 'adset_id'}"/>
             </search>
         </field>
     </record>

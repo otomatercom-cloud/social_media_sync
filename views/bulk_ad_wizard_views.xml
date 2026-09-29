@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_bulk_ad_wizard_form" model="ir.ui.view">
+        <field name="name">otm.sm.bulk.ad.wizard.form</field>
+        <field name="model">otm.sm.bulk.ad.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Bulk Add Ad ID Mappings">
+                <sheet>
+                    <field name="state" invisible="1"/>
+
+                    <!-- Draft state -->
+                    <div invisible="state != 'draft'">
+                        <div class="alert alert-info mb-3" role="alert">
+                            <strong>How to use:</strong>
+                            Fill each row — pick <strong>Campaign</strong>, then
+                            <strong>Ad Set</strong> (filtered by campaign), enter the
+                            <strong>Ad ID</strong> from your Google Sheet, and pick the
+                            <strong>Source Campaign</strong> in Odoo.
+                            Leave empty rows blank — they will be ignored.
+                        </div>
+
+                        <field name="line_ids">
+                            <list editable="bottom" string="Ad ID Mappings">
+                                <field name="campaign_id"
+                                       options="{'no_create': False}"
+                                       placeholder="Pick campaign…"/>
+                                <field name="adset_id"
+                                       options="{'no_create': False}"
+                                       domain="[('campaign_id','=',campaign_id)]"
+                                       placeholder="Pick ad set…"/>
+                                <field name="ad_id"
+                                       placeholder="e.g. 12024457959"/>
+                                <field name="source_campaign_id"
+                                       options="{'no_create': False}"
+                                       placeholder="Source Campaign in Odoo…"/>
+                                <field name="leads_source_id" readonly="1"
+                                       optional="show" string="Lead Source"/>
+                            </list>
+                        </field>
+                    </div>
+
+                    <!-- Done state — show results -->
+                    <div invisible="state != 'done'">
+                        <div class="alert alert-success mb-3" role="alert">
+                            <strong>✅ Done!</strong> See the results below.
+                        </div>
+                        <group string="Result Summary">
+                            <field name="result_summary" nolabel="1" widget="text"
+                                   readonly="1"
+                                   style="font-family:monospace; font-size:12px;
+                                          white-space:pre; min-height:120px;"/>
+                        </group>
+                        <group string="Row Details">
+                            <field name="line_ids" readonly="1" nolabel="1">
+                                <list>
+                                    <field name="campaign_id"/>
+                                    <field name="adset_id"/>
+                                    <field name="ad_id"/>
+                                    <field name="source_campaign_id"/>
+                                    <field name="status"/>
+                                </list>
+                            </field>
+                        </group>
+                    </div>
+                </sheet>
+
+                <footer>
+                    <!-- Draft buttons -->
+                    <button name="action_create" string="✅ Create All"
+                            type="object" class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_add_lines" string="+ Add 5 More Rows"
+                            type="object" class="btn-secondary"
+                            invisible="state != 'draft'"/>
+                    <button string="Cancel" special="cancel" class="btn-secondary"
+                            invisible="state != 'draft'"/>
+                    <!-- Done buttons -->
+                    <button name="action_close" string="Close"
+                            type="object" class="btn-primary"
+                            invisible="state != 'done'"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action to open wizard -->
+    <record id="action_bulk_ad_wizard" model="ir.actions.act_window">
+        <field name="name">Bulk Add Ad ID Mappings</field>
+        <field name="res_model">otm.sm.bulk.ad.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

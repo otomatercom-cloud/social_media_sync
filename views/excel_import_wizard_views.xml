@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<record id="view_ad_excel_import_wizard_form" model="ir.ui.view">
+    <field name="name">otm.sm.excel.import.wizard.form</field>
+    <field name="model">otm.sm.excel.import.wizard</field>
+    <field name="arch" type="xml">
+        <form string="Import Ad IDs from Excel">
+            <sheet>
+                <field name="state" invisible="1"/>
+
+                <!-- ══ Step 1: Upload ══ -->
+                <group invisible="state != 'upload'" string="📂 Upload Meta Ads Export">
+                    <div class="alert alert-info" role="alert">
+                        Upload your Meta Ads Excel export. Expected columns:<br/>
+                        <strong>Campaign name</strong> | <strong>Ad set name</strong> |
+                        <strong>Ad name</strong> (→ Source Campaign) | <strong>Ad ID</strong>
+                    </div>
+                    <group>
+                        <field name="excel_file" widget="binary"
+                               filename="file_name" string="Excel / CSV File"/>
+                        <field name="file_name" invisible="1"/>
+                        <field name="sheet_name"
+                               help="Sheet tab name in the Excel. Default: Formatted Report"/>
+                        <field name="default_leads_source_id"
+                               help="All new Source Campaigns (Ad names) will be placed under this Lead Source."/>
+                    </group>
+                </group>
+
+                <!-- ══ Step 2: Preview ══ -->
+                <group invisible="state != 'preview'" string="👁️ Preview">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="o_stat_button" style="cursor:default; display:inline-block; min-width:120px; text-align:center; border:1px solid #dee2e6; border-radius:8px; padding:12px; margin:4px;">
+                                <div style="font-size:28px; font-weight:800; color:#6366f1;">
+                                    <field name="ads_new" readonly="1" nolabel="1" style="display:inline;"/>
+                                </div>
+                                <div style="font-size:12px; color:#64748b;">Ad IDs to Import</div>
+                            </div>
+                            <div class="o_stat_button" style="cursor:default; display:inline-block; min-width:120px; text-align:center; border:1px solid #dee2e6; border-radius:8px; padding:12px; margin:4px;">
+                                <div style="font-size:28px; font-weight:800; color:#f59e0b;">
+                                    <field name="ads_skip" readonly="1" nolabel="1" style="display:inline;"/>
+                                </div>
+                                <div style="font-size:12px; color:#64748b;">Duplicates (skip)</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="o_stat_button" style="cursor:default; display:inline-block; min-width:120px; text-align:center; border:1px solid #dee2e6; border-radius:8px; padding:12px; margin:4px;">
+                                <div style="font-size:28px; font-weight:800; color:#10b981;">
+                                    <field name="campaigns_new" readonly="1" nolabel="1" style="display:inline;"/>
+                                </div>
+                                <div style="font-size:12px; color:#64748b;">New Campaigns</div>
+                            </div>
+                            <div class="o_stat_button" style="cursor:default; display:inline-block; min-width:120px; text-align:center; border:1px solid #dee2e6; border-radius:8px; padding:12px; margin:4px;">
+                                <div style="font-size:28px; font-weight:800; color:#3b82f6;">
+                                    <field name="adsets_new" readonly="1" nolabel="1" style="display:inline;"/>
+                                </div>
+                                <div style="font-size:12px; color:#64748b;">New Ad Sets</div>
+                            </div>
+                            <div class="o_stat_button" style="cursor:default; display:inline-block; min-width:120px; text-align:center; border:1px solid #dee2e6; border-radius:8px; padding:12px; margin:4px;">
+                                <div style="font-size:28px; font-weight:800; color:#8b5cf6;">
+                                    <field name="source_camps_new" readonly="1" nolabel="1" style="display:inline;"/>
+                                </div>
+                                <div style="font-size:12px; color:#64748b;">New Source Campaigns</div>
+                            </div>
+                        </div>
+                    </div>
+                    <field name="preview_text" nolabel="1" readonly="1" widget="text"
+                           style="font-family:monospace; font-size:12px; white-space:pre;
+                                  background:#f8fafc; border:1px solid #e2e8f0;
+                                  border-radius:6px; padding:12px; min-height:200px; margin-top:12px;"/>
+                </group>
+
+                <!-- ══ Step 3: Done ══ -->
+                <group invisible="state != 'done'" string="✅ Import Complete">
+                    <field name="result_text" nolabel="1" readonly="1" widget="text"
+                           style="font-family:monospace; font-size:13px; white-space:pre;
+                                  background:#f0fdf4; border:1px solid #bbf7d0;
+                                  border-radius:6px; padding:16px; min-height:120px;"/>
+                </group>
+
+            </sheet>
+            <footer>
+                <!-- Step 1 -->
+                <button name="action_preview" string="Preview →"
+                        type="object" class="btn-primary"
+                        invisible="state != 'upload'"/>
+                <button string="Cancel" special="cancel" class="btn-secondary"
+                        invisible="state != 'upload'"/>
+                <!-- Step 2 -->
+                <button name="action_import" string="✅ Import Now"
+                        type="object" class="btn-primary"
+                        invisible="state != 'preview'"/>
+                <button name="action_back" string="← Back"
+                        type="object" class="btn-secondary"
+                        invisible="state != 'preview'"/>
+                <!-- Step 3 -->
+                <button name="action_close" string="Close"
+                        type="object" class="btn-primary"
+                        invisible="state != 'done'"/>
+            </footer>
+        </form>
+    </field>
+</record>
+
+<!-- Server action — appears as button in Ad ID Mappings list -->
+<record id="action_ad_excel_import_from_list" model="ir.actions.server">
+    <field name="name">Import from Excel</field>
+    <field name="model_id" ref="model_otm_sm_ad_mapping"/>
+    <field name="binding_model_id" ref="model_otm_sm_ad_mapping"/>
+    <field name="binding_view_types">list</field>
+    <field name="state">code</field>
+    <field name="code">
+action = {
+    'type': 'ir.actions.act_window',
+    'name': 'Import Ad IDs from Excel',
+    'res_model': 'otm.sm.excel.import.wizard',
+    'view_mode': 'form',
+    'target': 'new',
+}
+    </field>
+</record>
+
+<!-- Also accessible from Campaigns list -->
+<record id="action_ad_excel_import_from_campaign" model="ir.actions.server">
+    <field name="name">Import from Excel</field>
+    <field name="model_id" ref="model_otm_sm_meta_campaign"/>
+    <field name="binding_model_id" ref="model_otm_sm_meta_campaign"/>
+    <field name="binding_view_types">list</field>
+    <field name="state">code</field>
+    <field name="code">
+action = {
+    'type': 'ir.actions.act_window',
+    'name': 'Import Ad IDs from Excel',
+    'res_model': 'otm.sm.excel.import.wizard',
+    'view_mode': 'form',
+    'target': 'new',
+}
+    </field>
+</record>
+
+
+<!-- Act window for menu access -->
+<record id="action_ad_excel_import_menu" model="ir.actions.act_window">
+    <field name="name">Import from Excel</field>
+    <field name="res_model">otm.sm.excel.import.wizard</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+</record>
+
+</odoo>

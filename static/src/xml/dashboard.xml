@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+<t t-name="social_media_sync.Dashboard">
+<div class="uc_dashboard o_action" t-ref="uc_root">
+
+    <!-- Header -->
+    <div class="uc_header">
+        <div class="uc_header_left">
+            <span class="uc_logo">📊</span>
+            <h2>Ads Manager</h2>
+        </div>
+        <div class="uc_header_right">
+            <div class="uc_period_tabs">
+                <button t-att-class="'uc_tab'+(state.period==='today'?' active':'')" t-on-click="()=>this.setPeriod('today')">Today</button>
+                <button t-att-class="'uc_tab'+(state.period==='week'?' active':'')"  t-on-click="()=>this.setPeriod('week')">This Week</button>
+                <button t-att-class="'uc_tab'+(state.period==='month'?' active':'')" t-on-click="()=>this.setPeriod('month')">This Month</button>
+                <button t-att-class="'uc_tab'+(state.period==='all'?' active':'')"   t-on-click="()=>this.setPeriod('all')">All Time</button>
+            </div>
+            <button class="btn btn-primary btn-sm ms-2" t-on-click="syncNow" t-att-disabled="state.syncing">
+                <t t-if="state.syncing">⟳ Syncing…</t>
+                <t t-else="">⟳ Sync Now</t>
+            </button>
+            <span class="uc_refresh_badge" t-if="state.refreshInterval">🔄 Auto <t t-esc="state.refreshInterval"/>m</span>
+        </div>
+    </div>
+
+    <t t-if="state.loading">
+        <div class="uc_loading"><div class="spinner-border text-primary"/><p>Loading dashboard…</p></div>
+    </t>
+
+    <t t-else="">
+
+        <!-- ── Row 1: Lead KPIs ── -->
+        <div class="uc_kpi_row">
+            <div class="uc_kpi_card uc_kpi_blue">
+                <div class="uc_kpi_icon">🎯</div>
+                <div class="uc_kpi_body">
+                    <div class="uc_kpi_value"><t t-esc="getPeriodLeads()"/></div>
+                    <div class="uc_kpi_label">Prospects</div>
+                    <div class="uc_kpi_sub"><t t-esc="periodLabel()"/></div>
+                </div>
+            </div>
+            <div class="uc_kpi_card uc_kpi_green">
+                <div class="uc_kpi_icon">🎓</div>
+                <div class="uc_kpi_body">
+                    <div class="uc_kpi_value"><t t-esc="getPeriodAdmissions()"/></div>
+                    <div class="uc_kpi_label">Admissions</div>
+                    <div class="uc_kpi_sub"><t t-esc="periodLabel()"/></div>
+                </div>
+            </div>
+            <div class="uc_kpi_card uc_kpi_orange">
+                <div class="uc_kpi_icon">🏆</div>
+                <div class="uc_kpi_body">
+                    <div class="uc_kpi_value uc_kpi_value_sm"><t t-esc="getBestAdset('leads')"/></div>
+                    <div class="uc_kpi_label">Best Ad Set</div>
+                    <div class="uc_kpi_sub"><t t-esc="periodLabel()"/></div>
+                </div>
+            </div>
+            <div class="uc_kpi_card uc_kpi_purple">
+                <div class="uc_kpi_icon">⭐</div>
+                <div class="uc_kpi_body">
+                    <div class="uc_kpi_value uc_kpi_value_sm"><t t-esc="getBestAdset('admissions')"/></div>
+                    <div class="uc_kpi_label">Best (Admissions)</div>
+                    <div class="uc_kpi_sub"><t t-esc="periodLabel()"/></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Row 2: Sync Summary KPIs ── -->
+        <div class="uc_kpi_row">
+            <div class="uc_kpi_card uc_kpi_teal">
+                <div class="uc_kpi_icon">✅</div>
+                <div class="uc_kpi_body">
+                    <div class="uc_kpi_value"><t t-esc="(state.data.sync_summary||{}).total_created||0"/></div>
+                    <div class="uc_kpi_label">Leads Created (all time)</div>
+                </div>
+            </div>
+            <div class="uc_kpi_card uc_kpi_yellow">
+                <div class="uc_kpi_icon">🔁</div>
+                <div class="uc_kpi_body">
+                    <div class="uc_kpi_value"><t t-esc="(state.data.sync_summary||{}).total_duplicates||0"/></div>
+                    <div class="uc_kpi_label">Re-Enquiries (Duplicates)</div>
+                </div>
+            </div>
+            <div class="uc_kpi_card uc_kpi_red">
+                <div class="uc_kpi_icon">❌</div>
+                <div class="uc_kpi_body">
+                    <div class="uc_kpi_value"><t t-esc="(state.data.sync_summary||{}).total_errors||0"/></div>
+                    <div class="uc_kpi_label">Sync Errors</div>
+                </div>
+            </div>
+            <div class="uc_kpi_card uc_kpi_grey">
+                <div class="uc_kpi_icon">🔄</div>
+                <div class="uc_kpi_body">
+                    <div class="uc_kpi_value"><t t-esc="(state.data.sync_summary||{}).total_runs||0"/></div>
+                    <div class="uc_kpi_label">Sync Runs (last 24h)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Best Performer Banner -->
+        <t t-if="getBestAdsetData('admissions')">
+            <div class="uc_best_banner">
+                <span class="uc_best_trophy">🏆</span>
+                <div class="uc_best_info">
+                    <strong>Best Performer (<t t-esc="periodLabel()"/>)</strong>
+                    <span class="uc_best_name"><t t-esc="getBestAdsetData('admissions').adset"/></span>
+                    <span class="uc_best_campaign">📣 <t t-esc="getBestAdsetData('admissions').campaign"/></span>
+                </div>
+                <div class="uc_best_stats">
+                    <div class="uc_best_stat">
+                        <span class="uc_best_val"><t t-esc="getBestAdsetData('admissions')[state.period].admissions"/></span>
+                        <span class="uc_best_lbl">Admissions</span>
+                    </div>
+                    <div class="uc_best_stat">
+                        <span class="uc_best_val"><t t-esc="getBestAdsetData('admissions')[state.period].leads"/></span>
+                        <span class="uc_best_lbl">Prospects</span>
+                    </div>
+                    <div class="uc_best_stat">
+                        <span class="uc_best_val"><t t-esc="getConvRate(getBestAdsetData('admissions')[state.period])"/>%</span>
+                        <span class="uc_best_lbl">Conv. Rate</span>
+                    </div>
+                </div>
+            </div>
+        </t>
+
+        <!-- Charts Row -->
+        <div class="uc_charts_row">
+            <div class="uc_chart_card uc_chart_large">
+                <h5 class="uc_chart_title">📈 Prospect &amp; Admission Trend — Last 14 Days</h5>
+                <canvas id="uc_daily_chart" height="150"/>
+            </div>
+            <div class="uc_chart_card uc_chart_small">
+                <h5 class="uc_chart_title">🥧 Lead Quality</h5>
+                <canvas id="uc_quality_chart" height="200"/>
+            </div>
+        </div>
+
+        <!-- ── Campaign Performance ── -->
+        <div class="uc_section_card">
+            <h5 class="uc_section_title">📣 Campaign Performance — <t t-esc="periodLabel()"/></h5>
+            <table class="table table-sm table-hover uc_table">
+                <thead>
+                    <tr>
+                        <th>#</th><th>Campaign</th>
+                        <th class="text-center">Prospects</th>
+                        <th class="text-center">Admissions</th>
+                        <th class="text-center">Conv %</th>
+                        <th>Bar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="getCampaignPerf()" t-as="camp" t-key="camp_index">
+                        <tr t-att-class="camp_index===0?'uc_top_row':''">
+                            <td><t t-if="camp_index===0">🥇</t><t t-elif="camp_index===1">🥈</t><t t-elif="camp_index===2">🥉</t><t t-else=""><t t-esc="camp_index+1"/></t></td>
+                            <td><strong><t t-esc="camp.campaign"/></strong></td>
+                            <td class="text-center"><span class="badge bg-primary"><t t-esc="camp[state.period].leads"/></span></td>
+                            <td class="text-center"><span class="badge bg-success"><t t-esc="camp[state.period].admissions"/></span></td>
+                            <td class="text-center"><t t-esc="getConvRate(camp[state.period])"/>%</td>
+                            <td>
+                                <div class="uc_mini_bar"><div class="uc_mini_bar_fill uc_bar_lead" t-attf-style="width:#{getCampShare(camp[state.period].leads)}%"/></div>
+                                <div class="uc_mini_bar mt-1"><div class="uc_mini_bar_fill uc_bar_adm" t-attf-style="width:#{getCampShare(camp[state.period].admissions,true)}%"/></div>
+                            </td>
+                        </tr>
+                    </t>
+                    <t t-if="!getCampaignPerf().length">
+                        <tr><td colspan="6" class="text-center text-muted">No campaign data yet</td></tr>
+                    </t>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ── Ad Set Performance ── -->
+        <div class="uc_section_card">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h5 class="uc_section_title mb-0">🎯 Ad Set Performance — <t t-esc="periodLabel()"/></h5>
+                <select class="form-select form-select-sm" style="width:200px" t-on-change="onCampaignFilter">
+                    <option value="">All Campaigns</option>
+                    <t t-foreach="getCampaignList()" t-as="c" t-key="c"><option t-att-value="c"><t t-esc="c"/></option></t>
+                </select>
+            </div>
+            <table class="table table-sm table-hover uc_table">
+                <thead>
+                    <tr>
+                        <th>#</th><th>Campaign</th><th>Ad Set</th>
+                        <th class="text-center">Prospects</th>
+                        <th class="text-center">🔥 Hot</th>
+                        <th class="text-center">🌞 Warm</th>
+                        <th class="text-center">🎓 Admissions</th>
+                        <th class="text-center">Conv %</th>
+                        <th>Bar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="getFilteredAdsets()" t-as="row" t-key="row_index">
+                        <tr t-att-class="row_index===0?'uc_top_row':''">
+                            <td><t t-if="row_index===0">🥇</t><t t-elif="row_index===1">🥈</t><t t-elif="row_index===2">🥉</t><t t-else=""><t t-esc="row_index+1"/></t></td>
+                            <td class="text-muted" style="font-size:12px;"><t t-esc="row.campaign"/></td>
+                            <td><strong><t t-esc="row.adset"/></strong></td>
+                            <td class="text-center"><span class="badge bg-primary"><t t-esc="row[state.period].leads"/></span></td>
+                            <td class="text-center text-danger"><t t-esc="row[state.period].hot"/></td>
+                            <td class="text-center text-warning"><t t-esc="row[state.period].warm"/></td>
+                            <td class="text-center"><span class="badge bg-success"><t t-esc="row[state.period].admissions"/></span></td>
+                            <td class="text-center"><strong><t t-esc="getConvRate(row[state.period])"/>%</strong></td>
+                            <td style="min-width:80px;">
+                                <div class="uc_mini_bar"><div class="uc_mini_bar_fill uc_bar_lead" t-attf-style="width:#{getAdsetShare(row[state.period].leads)}%"/></div>
+                                <div class="uc_mini_bar mt-1"><div class="uc_mini_bar_fill uc_bar_adm" t-attf-style="width:#{getAdsetShare(row[state.period].admissions,true)}%"/></div>
+                            </td>
+                        </tr>
+                    </t>
+                    <t t-if="!getFilteredAdsets().length">
+                        <tr><td colspan="9" class="text-center text-muted">No ad set data yet</td></tr>
+                    </t>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ── Per Ad (Ad ID) Performance ── -->
+        <div class="uc_section_card">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h5 class="uc_section_title mb-0">🔖 Per Ad Performance — <t t-esc="periodLabel()"/></h5>
+                <input type="text" class="form-control form-control-sm" style="width:220px"
+                       placeholder="Search Ad ID or name…"
+                       t-on-input="onAdSearch"/>
+            </div>
+            <table class="table table-sm table-hover uc_table">
+                <thead>
+                    <tr>
+                        <th>#</th><th>Ad ID</th><th>Source Campaign</th><th>Ad Set</th><th>Campaign</th>
+                        <th class="text-center">Period</th>
+                        <th class="text-center">Total</th>
+                        <th class="text-center">🎓</th>
+                        <th class="text-center">🔥</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="getFilteredAds()" t-as="ad" t-key="ad_index">
+                        <tr>
+                            <td><t t-esc="ad_index+1"/></td>
+                            <td><code style="font-size:11px;"><t t-esc="ad.ad_id"/></code></td>
+                            <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;"><t t-esc="ad.source_camp"/></td>
+                            <td style="font-size:12px;" class="text-muted"><t t-esc="ad.adset"/></td>
+                            <td style="font-size:12px;" class="text-muted"><t t-esc="ad.campaign"/></td>
+                            <td class="text-center"><span class="badge bg-primary"><t t-esc="ad[state.period]||0"/></span></td>
+                            <td class="text-center"><span class="badge bg-secondary"><t t-esc="ad.total"/></span></td>
+                            <td class="text-center text-success"><strong><t t-esc="ad.admissions"/></strong></td>
+                            <td class="text-center text-danger"><t t-esc="ad.hot"/></td>
+                        </tr>
+                    </t>
+                    <t t-if="!getFilteredAds().length">
+                        <tr><td colspan="9" class="text-center text-muted">No ad data yet — import Ad IDs first</td></tr>
+                    </t>
+                </tbody>
+            </table>
+            <div class="uc_legend">
+                <span class="uc_legend_dot uc_bar_lead"/>&#160;Prospects&#160;&#160;
+                <span class="uc_legend_dot uc_bar_adm"/>&#160;Admissions
+            </div>
+        </div>
+
+        <!-- Sync History -->
+        <div class="uc_section_card">
+            <h5 class="uc_section_title">🔄 Recent Sync History</h5>
+            <table class="table table-sm uc_table">
+                <thead>
+                    <tr><th>Date</th><th>Config</th><th>Created</th><th>Re-Enquiries</th><th>Errors</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="state.data.sync_logs||[]" t-as="log" t-key="log_index">
+                        <tr>
+                            <td><t t-esc="log.date"/></td>
+                            <td><t t-esc="log.config"/></td>
+                            <td class="text-success"><strong><t t-esc="log.created"/></strong></td>
+                            <td class="text-warning"><t t-esc="log.skipped"/></td>
+                            <td class="text-danger"><t t-esc="log.errors"/></td>
+                            <td><span t-att-class="'badge '+(log.state==='success'?'bg-success':log.state==='partial'?'bg-warning':'bg-danger')"><t t-esc="log.state"/></span></td>
+                        </tr>
+                    </t>
+                    <t t-if="!(state.data.sync_logs||[]).length">
+                        <tr><td colspan="6" class="text-center text-muted">No sync runs yet</td></tr>
+                    </t>
+                </tbody>
+            </table>
+        </div>
+
+    </t>
+</div>
+</t>
+</templates>

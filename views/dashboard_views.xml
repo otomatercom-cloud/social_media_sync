@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_otm_sm_dashboard" model="ir.actions.client">
+        <field name="name">Social Media Dashboard</field>
+        <field name="tag">otm_sm_dashboard</field>
+    </record>
+</odoo>

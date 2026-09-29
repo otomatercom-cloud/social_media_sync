@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_otm_sm_sync_log_tree" model="ir.ui.view">
+        <field name="name">otm.sm.sync.log.tree</field>
+        <field name="model">otm.sm.sync.log</field>
+        <field name="arch" type="xml">
+            <list string="Sync Logs" decoration-success="state=='success'"
+                  decoration-warning="state=='partial'" decoration-danger="state=='failed'">
+                <field name="sync_date"/>
+                <field name="config_id"/>
+                <field name="triggered_by"/>
+                <field name="rows_fetched"/>
+                <field name="leads_created"/>
+                <field name="leads_skipped"/>
+                <field name="leads_updated"/>
+                <field name="leads_error"/>
+                <field name="state" widget="badge"
+                       decoration-success="state=='success'"
+                       decoration-warning="state=='partial'"
+                       decoration-danger="state=='failed'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_otm_sm_sync_log_form" model="ir.ui.view">
+        <field name="name">otm.sm.sync.log.form</field>
+        <field name="model">otm.sm.sync.log</field>
+        <field name="arch" type="xml">
+            <form string="Sync Log" create="false" edit="false">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="config_id"/>
+                            <field name="sync_date"/>
+                            <field name="triggered_by"/>
+                            <field name="state" widget="badge"
+                                   decoration-success="state=='success'"
+                                   decoration-warning="state=='partial'"
+                                   decoration-danger="state=='failed'"/>
+                        </group>
+                        <group>
+                            <field name="rows_fetched"/>
+                            <field name="leads_created"/>
+                            <field name="leads_skipped"/>
+                            <field name="leads_updated"/>
+                            <field name="leads_error"/>
+                        </group>
+                    </group>
+                    <group string="Error Details" invisible="not error_details">
+                        <field name="error_details" nolabel="1" widget="text" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_otm_sm_sync_log" model="ir.actions.act_window">
+        <field name="name">Sync History</field>
+        <field name="res_model">otm.sm.sync.log</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

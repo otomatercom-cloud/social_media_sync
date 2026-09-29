@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Root app: Team Lead + Admin only -->
+    <menuitem id="menu_ads_manager_root"
+              name="Social Media Sync"
+              sequence="50"
+              groups="custom_leads_19.group_lead_team_lead,base.group_system"
+              web_icon="social_media_sync,static/description/icon.png"/>
+
+    <!-- Dashboard: Team Lead + Admin -->
+    <menuitem id="menu_ads_manager_dashboard"
+              name="Dashboard"
+              parent="menu_ads_manager_root"
+              action="action_otm_sm_dashboard"
+              groups="custom_leads_19.group_lead_team_lead,base.group_system"
+              sequence="10"/>
+
+    <!-- Meta Ad Mapping: Admin only -->
+    <menuitem id="menu_ads_manager_meta_root"
+              name="Meta Ad Mapping"
+              parent="menu_ads_manager_root"
+              groups="base.group_system"
+              sequence="20"/>
+
+    <menuitem id="menu_ads_manager_meta_campaign"
+              name="Campaigns"
+              parent="menu_ads_manager_meta_root"
+              action="action_meta_campaign"
+              groups="base.group_system"
+              sequence="10"/>
+
+    <menuitem id="menu_ads_manager_meta_adset"
+              name="Ad Sets"
+              parent="menu_ads_manager_meta_root"
+              action="action_meta_adset"
+              groups="base.group_system"
+              sequence="20"/>
+
+    <menuitem id="menu_ads_manager_ad_mapping"
+              name="Ads (Ad IDs)"
+              parent="menu_ads_manager_meta_root"
+              action="action_otm_sm_ad_mapping"
+              groups="base.group_system"
+              sequence="30"/>
+
+    <menuitem id="menu_ads_manager_import"
+              name="Import Ad IDs from Excel"
+              parent="menu_ads_manager_meta_root"
+              action="social_media_sync.action_ad_excel_import_menu"
+              groups="base.group_system"
+              sequence="40"/>
+
+    <!-- Sheet Configurations: Admin only -->
+    <menuitem id="menu_ads_manager_sheet_config"
+              name="Sheet Configurations"
+              parent="menu_ads_manager_root"
+              action="action_otm_sm_sheet_config"
+              groups="base.group_system"
+              sequence="30"/>
+
+    <!-- Sync History: Admin only -->
+    <menuitem id="menu_ads_manager_sync_log"
+              name="Sync Logs (24h)"
+              parent="menu_ads_manager_root"
+              action="action_otm_sm_sync_log"
+              groups="base.group_system"
+              sequence="40"/>
+
+</odoo>

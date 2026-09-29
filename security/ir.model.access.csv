@@ -1,0 +1,18 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_otm_sm_meta_campaign_admin,otm.sm.meta.campaign admin,model_otm_sm_meta_campaign,base.group_system,1,1,1,1
+access_otm_sm_meta_campaign_tl,otm.sm.meta.campaign team lead,model_otm_sm_meta_campaign,custom_leads_19.group_lead_team_lead,1,0,0,0
+access_otm_sm_meta_adset_admin,otm.sm.meta.adset admin,model_otm_sm_meta_adset,base.group_system,1,1,1,1
+access_otm_sm_meta_adset_tl,otm.sm.meta.adset team lead,model_otm_sm_meta_adset,custom_leads_19.group_lead_team_lead,1,0,0,0
+access_otm_sm_ad_mapping_admin,otm.sm.ad.mapping admin,model_otm_sm_ad_mapping,base.group_system,1,1,1,1
+access_otm_sm_ad_mapping_tl,otm.sm.ad.mapping team lead,model_otm_sm_ad_mapping,custom_leads_19.group_lead_team_lead,1,0,0,0
+access_otm_sm_sheet_config_admin,otm.sm.sheet.config admin,model_otm_sm_sheet_config,base.group_system,1,1,1,1
+access_otm_sm_sheet_config_tl,otm.sm.sheet.config team lead,model_otm_sm_sheet_config,custom_leads_19.group_lead_team_lead,1,0,0,0
+access_otm_sm_sync_log_admin,otm.sm.sync.log admin,model_otm_sm_sync_log,base.group_system,1,1,1,1
+access_otm_sm_sync_log_tl,otm.sm.sync.log team lead,model_otm_sm_sync_log,custom_leads_19.group_lead_team_lead,1,0,0,0
+access_otm_sm_column_mapping_admin,otm.sm.column.mapping admin,model_otm_sm_column_mapping,base.group_system,1,1,1,1
+access_otm_sm_column_mapping_tl,otm.sm.column.mapping team lead,model_otm_sm_column_mapping,custom_leads_19.group_lead_team_lead,1,0,0,0
+access_otm_sm_sync_row_admin,otm.sm.sync.row admin,model_otm_sm_sync_row,base.group_system,1,1,1,1
+access_otm_sm_test_connection_wizard_admin,otm.sm.test.connection.wizard admin,model_otm_sm_test_connection_wizard,base.group_system,1,1,1,1
+access_otm_sm_bulk_ad_wizard_admin,otm.sm.bulk.ad.wizard admin,model_otm_sm_bulk_ad_wizard,base.group_system,1,1,1,1
+access_otm_sm_bulk_ad_wizard_line_admin,otm.sm.bulk.ad.wizard.line admin,model_otm_sm_bulk_ad_wizard_line,base.group_system,1,1,1,1
+access_otm_sm_excel_import_wizard_admin,otm.sm.excel.import.wizard admin,model_otm_sm_excel_import_wizard,base.group_system,1,1,1,1

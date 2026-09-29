@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── List View ─────────────────────────────────────────────────── -->
+    <record id="view_otm_sm_sheet_config_tree" model="ir.ui.view">
+        <field name="name">otm.sm.sheet.config.list</field>
+        <field name="model">otm.sm.sheet.config</field>
+        <field name="arch" type="xml">
+            <list string="Sheet Configurations">
+                <field name="name"/>
+                <field name="sheet_id"/>
+                <field name="last_row"/>
+                <field name="total_leads_created"/>
+                <field name="total_reattempts"/>
+                <field name="total_errors"/>
+                <field name="last_check_date"/>
+                <field name="active" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Form View ─────────────────────────────────────────────────── -->
+    <record id="view_otm_sm_sheet_config_form" model="ir.ui.view">
+        <field name="name">otm.sm.sheet.config.form</field>
+        <field name="model">otm.sm.sheet.config</field>
+        <field name="arch" type="xml">
+            <form string="Sheet Configuration">
+                <header>
+                    <button name="action_test_connection" string="Test Connection" type="object" class="btn-secondary"/>
+                    <button name="action_sync_now" string="Sync Now" type="object" class="btn-primary"/>
+                    <button name="action_retry_errors" string="Retry Error Rows" type="object" class="btn-secondary"
+                            invisible="total_errors == 0"/>
+                    <button name="action_purge_logs" string="Clear Logs" type="object" class="btn-secondary"/>
+                    <button name="action_reset_tracking" string="Reset Tracking" type="object" class="btn-secondary"
+                            confirm="Forget every synced row? The next sync re-reads the sheet from the start. Phones already in Odoo become Re-Attempts. Continue?"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="e.g. Meta Leads Sheet"/></h1>
+                    </div>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_logs" type="object" class="oe_stat_button" icon="fa-history">
+                            <field name="sync_log_count" widget="statinfo" string="Logs (24h)"/>
+                        </button>
+                        <button name="action_view_error_rows" type="object" class="oe_stat_button" icon="fa-exclamation-triangle"
+                                invisible="total_errors == 0">
+                            <field name="total_errors" widget="statinfo" string="Error Rows"/>
+                        </button>
+                        <div class="oe_stat_button" icon="fa-users">
+                            <field name="total_leads_created" widget="statinfo" string="Leads Created"/>
+                        </div>
+                        <div class="oe_stat_button" icon="fa-check-circle">
+                            <field name="rows_tracked" widget="statinfo" string="Rows Tracked"/>
+                        </div>
+                    </div>
+
+                    <notebook>
+
+                        <!-- ══ Tab 1 · Connection ═════════════════════════ -->
+                        <page string="Connection" name="connection">
+                            <group>
+                                <group string="Google Sheet">
+                                    <field name="sheet_url" widget="url" placeholder="https://docs.google.com/spreadsheets/d/…"/>
+                                    <field name="sheet_id" readonly="1"/>
+                                    <field name="gid" invisible="auth_method != 'public'"/>
+                                    <field name="tab_name" invisible="auth_method != 'service_account'"/>
+                                    <field name="header_row"/>
+                                    <field name="active"/>
+                                </group>
+                                <group string="Authentication">
+                                    <field name="auth_method" widget="radio"/>
+                                    <field name="service_account_json" widget="text"
+                                           invisible="auth_method != 'service_account'"
+                                           placeholder="Paste the full JSON of the service account key…"/>
+                                    <field name="fetch_mode" invisible="auth_method != 'public'"/>
+                                </group>
+                            </group>
+                            <group string="Schedule &amp; position">
+                                <group>
+                                    <field name="sync_interval_minutes"/>
+                                    <field name="batch_size"/>
+                                    <field name="recheck_rows"/>
+                                    <field name="initial_row" readonly="last_row > 0"/>
+                                </group>
+                                <group>
+                                    <field name="last_row"/>
+                                    <field name="last_check_date"/>
+                                    <field name="last_sync_date"/>
+                                    <field name="next_sync_date"/>
+                                    <field name="has_backlog"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- ══ Tab 2 · Column Mapping ═════════════════════ -->
+                        <page string="Column Mapping" name="columns">
+                            <div class="alert alert-info" role="alert">
+                                <strong>How to fill this table:</strong>
+                                Open your Google Sheet → look at <strong>Row 1</strong> (the header row).
+                                Copy each column header name exactly (case-sensitive) into the
+                                <em>Sheet Column Header</em> column, then pick the matching
+                                <em>Lead Field</em> from the dropdown.
+                                Tick <em>Required?</em> for columns that must have a value
+                                (rows with empty required columns are skipped).
+                                Use <em>Default Value</em> to fill in a fixed value when the
+                                sheet cell is blank.
+                            </div>
+                            <field name="column_mapping_ids">
+                                <list editable="bottom" string="Column Mappings">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="sheet_column"
+                                           placeholder="Exact header from sheet…"/>
+                                    <field name="lead_field"/>
+                                    <field name="lead_field_label" optional="show" readonly="1"
+                                           string="Maps To (label)"/>
+                                    <field name="is_required"/>
+                                    <field name="default_value" optional="show"
+                                           placeholder="Leave blank if not needed"/>
+                                    <field name="note" optional="show"
+                                           placeholder="Internal note…"/>
+                                </list>
+                            </field>
+
+                            <!-- Quick reference card -->
+                            <div class="mt-3 p-3 border rounded bg-light">
+                                <strong>Tips:</strong> format the Ad ID column as <em>Plain text</em> (long numbers turn into 1.2E+17).
+                                <br/><strong>Typical headers:</strong>
+                                <table class="table table-sm mt-2" style="font-size:12px;">
+                                    <thead>
+                                        <tr>
+                                            <th>Typical Sheet Header</th>
+                                            <th>Lead Field to pick</th>
+                                            <th>Required?</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td><code>Name</code></td><td>👤 Lead Name</td><td>✅</td></tr>
+                                        <tr><td><code>Phone</code></td><td>📱 Mobile / Phone</td><td>✅</td></tr>
+                                        <tr><td><code>Email</code></td><td>📧 Email</td><td>—</td></tr>
+                                        <tr><td><code>Ad Id</code></td><td>🔖 Ad ID (for campaign auto-map)</td><td>—</td></tr>
+                                        <tr><td><code>Interested Course</code></td><td>📚 Course Interested</td><td>—</td></tr>
+                                        <tr><td><code>Location</code></td><td>🏫 College / School</td><td>—</td></tr>
+                                        <tr><td><code>Conversation Assigned to</code></td><td>🧑‍💼 Admission Officer (matched by name)</td><td>—</td></tr>
+                                        <tr><td><code>Date</code></td><td>🕐 Timestamp (filter only)</td><td>—</td></tr>
+                                        <tr><td><code>Channel</code></td><td>📡 Incoming Source</td><td>—</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </page>
+
+                        <!-- ══ Tab 3 · Lead Defaults ══════════════════════ -->
+                        <page string="Lead Defaults" name="defaults">
+                            <group>
+                                <group>
+                                    <field name="default_leads_source_id"
+                                           help="Used when no Ad ID mapping matches a row. Required if Ad ID column is absent."/>
+                                    <field name="default_lead_quality"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- ══ Tab 4 · Sync History ═══════════════════════ -->
+                        <page string="Sync Logs (24h)" name="sync_history">
+                            <field name="sync_log_ids" readonly="1">
+                                <list>
+                                    <field name="sync_date"/>
+                                    <field name="triggered_by"/>
+                                    <field name="rows_fetched"/>
+                                    <field name="leads_created"/>
+                                    <field name="leads_skipped"/>
+                                    <field name="leads_updated"/>
+                                    <field name="leads_error"/>
+                                    <field name="state" widget="badge"
+                                           decoration-success="state=='success'"
+                                           decoration-warning="state=='partial'"
+                                           decoration-danger="state=='failed'"/>
+                                </list>
+                            </field>
+                        </page>
+
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Action ────────────────────────────────────────────────────── -->
+    <record id="action_otm_sm_sheet_config" model="ir.actions.act_window">
+        <field name="name">Sheet Configurations</field>
+        <field name="res_model">otm.sm.sheet.config</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

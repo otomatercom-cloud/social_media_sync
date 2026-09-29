@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     Level 1 — Meta Campaign
+══════════════════════════════════════════════════════════════════════════ -->
+
+    <record id="view_meta_campaign_tree" model="ir.ui.view">
+        <field name="name">otm.sm.meta.campaign.tree</field>
+        <field name="model">otm.sm.meta.campaign</field>
+        <field name="arch" type="xml">
+            <list string="Meta Campaigns">
+                <field name="name"/>
+                <field name="adset_count" string="Ad Sets"/>
+                <field name="active" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_meta_campaign_form" model="ir.ui.view">
+        <field name="name">otm.sm.meta.campaign.form</field>
+        <field name="model">otm.sm.meta.campaign</field>
+        <field name="arch" type="xml">
+            <form string="Meta Campaign">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_adsets" type="object"
+                                class="oe_stat_button" icon="fa-th-list">
+                            <field name="adset_count" widget="statinfo" string="Ad Sets"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="e.g. CA Weekend May 2025"/></h1>
+                    </div>
+                    <group>
+                        <field name="active"/>
+                        <field name="note" placeholder="Internal notes…"/>
+                    </group>
+
+                    <!-- Inline Ad Sets -->
+                    <notebook>
+                        <page string="Ad Sets" name="adsets">
+                            <field name="adset_ids">
+                                <list editable="bottom" string="Ad Sets">
+                                    <field name="name" placeholder="Ad Set name…"/>
+                                    <field name="ad_count" string="Ads" readonly="1"/>
+                                    <field name="active" optional="show"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_meta_campaign" model="ir.actions.act_window">
+        <field name="name">Meta Campaigns</field>
+        <field name="res_model">otm.sm.meta.campaign</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create your first Meta Campaign</p>
+            <p>
+                Mirror your Meta Ads structure here:<br/>
+                <strong>Campaign → Ad Set → Ad (Ad ID) → Source Campaign</strong>
+            </p>
+        </field>
+    </record>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     Level 2 — Meta Ad Set
+══════════════════════════════════════════════════════════════════════════ -->
+
+    <record id="view_meta_adset_tree" model="ir.ui.view">
+        <field name="name">otm.sm.meta.adset.tree</field>
+        <field name="model">otm.sm.meta.adset</field>
+        <field name="arch" type="xml">
+            <list string="Ad Sets">
+                <field name="campaign_id"/>
+                <field name="name"/>
+                <field name="ad_count" string="Ads"/>
+                <field name="active" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_meta_adset_form" model="ir.ui.view">
+        <field name="name">otm.sm.meta.adset.form</field>
+        <field name="model">otm.sm.meta.adset</field>
+        <field name="arch" type="xml">
+            <form string="Ad Set">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_ads" type="object"
+                                class="oe_stat_button" icon="fa-bullhorn">
+                            <field name="ad_count" widget="statinfo" string="Ads"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="e.g. Ernakulam 18-35 Audience"/></h1>
+                    </div>
+                    <group>
+                        <field name="campaign_id"/>
+                        <field name="active"/>
+                        <field name="note" placeholder="Internal notes…"/>
+                    </group>
+
+                    <!-- Inline Ads -->
+                    <notebook>
+                        <page string="Ads (Ad IDs)" name="ads">
+                            <field name="ad_ids">
+                                <list editable="bottom" string="Ads">
+                                    <field name="ad_id" placeholder="e.g. 12024457959"/>
+                                    <field name="source_campaign_id"/>
+                                    <field name="leads_source_id" readonly="1" optional="show"/>
+                                    <field name="active" optional="show"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_meta_adset" model="ir.actions.act_window">
+        <field name="name">Ad Sets</field>
+        <field name="res_model">otm.sm.meta.adset</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     Level 3 — Ad ID Mapping (flat list view with full hierarchy shown)
+══════════════════════════════════════════════════════════════════════════ -->
+
+    <record id="view_otm_sm_ad_mapping_tree" model="ir.ui.view">
+        <field name="name">otm.sm.ad.mapping.tree</field>
+        <field name="model">otm.sm.ad.mapping</field>
+        <field name="arch" type="xml">
+            <list string="Ad ID Mappings" editable="top">
+                <field name="campaign_id" string="Campaign"/>
+                <field name="adset_id"    string="Ad Set"/>
+                <field name="ad_id"       placeholder="Ad ID from sheet…"/>
+                <field name="source_campaign_id" string="Source Campaign (Odoo)"/>
+                <field name="leads_source_id" readonly="1" optional="show"
+                       string="Lead Source (auto)"/>
+                <field name="active" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_otm_sm_ad_mapping_form" model="ir.ui.view">
+        <field name="name">otm.sm.ad.mapping.form</field>
+        <field name="model">otm.sm.ad.mapping</field>
+        <field name="arch" type="xml">
+            <form string="Ad">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="ad_id" placeholder="Ad ID from sheet…"/></h1>
+                    </div>
+                    <group>
+                        <group string="Meta Structure">
+                            <field name="campaign_id" readonly="1"/>
+                            <field name="adset_id"
+                                   options="{'no_create': False}"/>
+                        </group>
+                        <group string="Odoo Mapping">
+                            <field name="source_campaign_id"/>
+                            <field name="leads_source_id" readonly="1"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group string="Notes">
+                        <field name="note" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_otm_sm_ad_mapping_search" model="ir.ui.view">
+        <field name="name">otm.sm.ad.mapping.search</field>
+        <field name="model">otm.sm.ad.mapping</field>
+        <field name="arch" type="xml">
+            <search string="Search Ads">
+                <field name="ad_id"/>
+                <field name="campaign_id"/>
+                <field name="adset_id"/>
+                <field name="source_campaign_id"/>
+                <filter name="active" string="Active" domain="[('active','=',True)]"/>
+                <filter name="inactive" string="Archived" domain="[('active','=',False)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_campaign" string="Campaign"
+                            context="{'group_by': 'campaign_id'}"/>
+                    <filter name="group_adset" string="Ad Set"
+                            context="{'group_by': 'adset_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_otm_sm_ad_mapping" model="ir.actions.act_window">
+        <field name="name">Ad ID Mappings</field>
+        <field name="res_model">otm.sm.ad.mapping</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_group_campaign': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No Ad mappings yet</p>
+            <p>
+                Use <strong>Bulk Add</strong> to add multiple Ad IDs at once,
+                or create them one by one from the <strong>New</strong> button.
+            </p>
+        </field>
+    </record>
+
+    <!-- Server action for Bulk Add button in list -->
+    <record id="action_bulk_ad_from_list" model="ir.actions.server">
+        <field name="name">Bulk Add Ad IDs</field>
+        <field name="model_id" ref="model_otm_sm_ad_mapping"/>
+        <field name="binding_model_id" ref="model_otm_sm_ad_mapping"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+action = {
+    'type': 'ir.actions.act_window',
+    'name': 'Bulk Add Ad ID Mappings',
+    'res_model': 'otm.sm.bulk.ad.wizard',
+    'view_mode': 'form',
+    'target': 'new',
+}
+        </field>
+    </record>
+
+</odoo>

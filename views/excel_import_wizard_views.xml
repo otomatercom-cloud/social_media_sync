@@ -26,7 +26,7 @@
                         <field name="sheet_name"
                                help="Sheet tab name in the Excel. Default: Formatted Report"/>
                         <field name="default_leads_source_id"
-                               help="All new Source Campaigns (Ad names) will be placed under this Lead Source."/>
+                               help="Optional. Used only when a row has no Lead Source column value."/>
                     </group>
                 </group>
 

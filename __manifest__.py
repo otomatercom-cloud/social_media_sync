@@ -1,6 +1,6 @@
 {
     'name': 'Social Media Sync',
-    'version': '19.0.1.0.1',
+    'version': '19.0.1.0.2',
     'summary': 'Google Sheet lead sync (new rows only) with Meta Ad ID to Source Campaign mapping and dashboard',
     'description': """
 Social Media Sync

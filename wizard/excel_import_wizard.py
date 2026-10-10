@@ -41,9 +41,8 @@ class AdExcelImportWizard(models.TransientModel):
     # Default Lead Source applied to all auto-created Source Campaigns
     default_leads_source_id = fields.Many2one(
         'leads.sources', string='Default Lead Source',
-        required=True,
-        help='All Source Campaigns created from the Ad name column will be '
-             'placed under this Lead Source.',
+        help='Only used for rows whose Lead Source column is empty or not found. '
+             'Leave blank when every row already has a Lead Source (e.g. META).',
     )
 
     # ── Step 2: Preview counts ──────────────────────────────────────────────
@@ -163,8 +162,6 @@ class AdExcelImportWizard(models.TransientModel):
     # ── Actions ─────────────────────────────────────────────────────────────
     def action_preview(self):
         self.ensure_one()
-        if not self.default_leads_source_id:
-            raise UserError(_('Please set a Default Lead Source before previewing.'))
         rows = self._parse_file()
         if not rows:
             raise UserError(_('File is empty or could not be parsed.'))
@@ -191,6 +188,10 @@ class AdExcelImportWizard(models.TransientModel):
                 continue
             seen_ads.add(r['ad_id'])
             src = self._source_for(r['source'], src_cache, self.default_leads_source_id)
+            if not src:
+                missing.append(r['ad_id'])
+                seen_ads.discard(r['ad_id'])
+                continue
             if self._key(r['camp']) not in camps:
                 new_camps.add(self._key(r['camp']))
             if (self._key(r['camp']), self._key(r['adset'])) not in adsets:
@@ -210,7 +211,7 @@ class AdExcelImportWizard(models.TransientModel):
             f'Total rows in file:          {len(rows)}',
             f'Ad IDs to import:            {len(seen_ads)}',
             f'Already imported (skip):     {len(skip_ads)}',
-            f'Rows missing Campaign / Ad Set / Source Campaign: {len(missing)}',
+            f'Rows missing Campaign / Ad Set / Source Campaign / Lead Source: {len(missing)}',
             '',
             f'New Meta Campaigns:          {len(new_camps)}',
             f'New Meta Ad Sets:            {len(new_adsets)}',
@@ -259,6 +260,8 @@ class AdExcelImportWizard(models.TransientModel):
             try:
                 with self.env.cr.savepoint():
                     src = self._source_for(r['source'], src_cache, default_src)
+                    if not src:
+                        raise UserError(_('No Lead Source in the file row and no Default Lead Source set.'))
                     ck = self._key(r['camp'])
                     if ck not in camp_cache:
                         camp_cache[ck] = Camp.create({'name': r['camp']})

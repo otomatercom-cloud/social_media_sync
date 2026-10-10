@@ -13,8 +13,11 @@
                 <group invisible="state != 'upload'" string="📂 Upload Meta Ads Export">
                     <div class="alert alert-info" role="alert">
                         Upload your Meta Ads Excel export. Expected columns:<br/>
-                        <strong>Campaign name</strong> | <strong>Ad set name</strong> |
-                        <strong>Ad name</strong> (→ Source Campaign) | <strong>Ad ID</strong>
+                        <strong>Campaign</strong> | <strong>Ad Set</strong> |
+                        <strong>Source Campaign</strong> (or <em>Ad name</em>) | <strong>Ad ID</strong>
+                        | optional <strong>Lead Source (auto)</strong>, <strong>Active</strong>.<br/>
+                        Use this wizard instead of Odoo's built-in Import: it matches names ignoring
+                        case and extra spaces, so duplicate names no longer block the file.
                     </div>
                     <group>
                         <field name="excel_file" widget="binary"

@@ -12,11 +12,13 @@ class AdExcelImportWizard(models.TransientModel):
     """
     Import Ad IDs from a Meta Ads Excel export.
 
-    Expected columns (any order, matched by header name):
-        Campaign name  →  otm.sm.meta.campaign
-        Ad set name    →  otm.sm.meta.adset
-        Ad name        →  lead.source.campaign  (auto-created if missing)
-        Ad ID          →  otm.sm.ad.mapping.ad_id
+    Expected columns (any order, header names are case-insensitive):
+        Campaign name / Campaign                 →  otm.sm.meta.campaign
+        Ad set name / Ad Set                     →  otm.sm.meta.adset
+        Ad name / Source Campaign                →  lead.source.campaign (auto-created if missing)
+        Ad ID                                    →  otm.sm.ad.mapping.ad_id
+        Lead Source (auto) / Lead Source  (opt.) →  leads.sources by name (default source if empty)
+        Active (opt.)                            →  False = archived mapping
 
     Lead Source is auto-filled from the Source Campaign's parent Lead Source.
     """
@@ -102,91 +104,125 @@ class AdExcelImportWizard(models.TransientModel):
             return str(int(v))
         return str(v).strip()
 
-    def _get_col(self, row, *keys):
-        """Try multiple possible column names."""
-        for k in keys:
-            v = row.get(k, '').strip()
-            if v:
-                return v
-        return ''
+    @staticmethod
+    def _clean(v):
+        """Collapse runs of spaces / tabs / non-breaking spaces; empty-safe."""
+        return ' '.join(str(v or '').replace('\u00a0', ' ').split())
+
+    @staticmethod
+    def _key(v):
+        return AdExcelImportWizard._clean(v).casefold()
+
+    @staticmethod
+    def _clean_ad_id(v):
+        """'120250590667940593.' / '1.2E+17' safe: keep digits when the value is numeric-like."""
+        v = AdExcelImportWizard._clean(v).replace(',', '')
+        if v.endswith('.'):
+            v = v[:-1]
+        if v.endswith('.0'):
+            v = v[:-2]
+        return v
+
+    _COLS = {
+        'camp':   ('campaign name', 'campaign_name', 'campaign'),
+        'adset':  ('ad set name', 'adset_name', 'ad set', 'adset'),
+        'ad':     ('ad name', 'ad_name', 'source campaign', 'source_campaign'),
+        'ad_id':  ('ad id', 'ad_id', 'adid'),
+        'source': ('lead source (auto)', 'lead source', 'lead_source', 'source'),
+        'active': ('active',),
+    }
+
+    def _norm_row(self, row):
+        """One file row -> clean values. Header names are case/space-insensitive."""
+        low = {self._key(k): v for k, v in row.items() if k}
+        def pick(name):
+            for k in self._COLS[name]:
+                v = low.get(k)
+                if v not in (None, ''):
+                    return v
+            return ''
+        active_raw = self._key(pick('active'))
+        return {
+            'camp': self._clean(pick('camp')),
+            'adset': self._clean(pick('adset')),
+            'ad_name': self._clean(pick('ad')),
+            'ad_id': self._clean_ad_id(pick('ad_id')),
+            'source': self._clean(pick('source')),
+            'active': active_raw not in ('false', '0', 'no', 'archived'),
+        }
+
+    def _source_for(self, name, cache, default):
+        """Lead Source named in the file (e.g. META); falls back to the wizard default."""
+        if not name:
+            return default
+        k = self._key(name)
+        if k not in cache:
+            cache[k] = self.env['leads.sources'].search([('name', '=ilike', name.strip())], limit=1)
+        return cache[k] or default
 
     # ── Actions ─────────────────────────────────────────────────────────────
     def action_preview(self):
         self.ensure_one()
         if not self.default_leads_source_id:
             raise UserError(_('Please set a Default Lead Source before previewing.'))
-
         rows = self._parse_file()
         if not rows:
             raise UserError(_('File is empty or could not be parsed.'))
 
-        AdMap    = self.env['otm.sm.ad.mapping']
-        Camp     = self.env['otm.sm.meta.campaign']
-        Adset    = self.env['otm.sm.meta.adset']
-        SrcCamp  = self.env['lead.source.campaign']
-
-        seen_camps   = set()
-        seen_adsets  = set()
-        seen_srccamps= set()
-        seen_adids   = set()
-        skip_adids   = set()
-
-        existing_adids = set(AdMap.search([]).mapped('ad_id'))
-
+        existing_adids = set(self.env['otm.sm.ad.mapping'].with_context(active_test=False).search([]).mapped('ad_id'))
+        camps = {self._key(c.name) for c in self.env['otm.sm.meta.campaign'].with_context(active_test=False).search([])}
+        adsets = {(self._key(a.campaign_id.name), self._key(a.name))
+                  for a in self.env['otm.sm.meta.adset'].with_context(active_test=False).search([])}
+        srcs = {(c.lead_source_id.id, self._key(c.name))
+                for c in self.env['lead.source.campaign'].with_context(active_test=False).search([])}
+        src_cache = {}
+        seen_ads, skip_ads = set(), set()
+        new_camps, new_adsets, new_srcs, missing = set(), set(), set(), []
+        samples = []
         for row in rows:
-            camp_name  = self._get_col(row, 'Campaign name', 'campaign_name', 'Campaign')
-            adset_name = self._get_col(row, 'Ad set name', 'adset_name', 'Ad set')
-            ad_name    = self._get_col(row, 'Ad name', 'ad_name', 'Ad Name')
-            ad_id      = self._get_col(row, 'Ad ID', 'ad_id', 'Ad Id')
-
-            if not ad_id:
+            r = self._norm_row(row)
+            if not r['ad_id']:
                 continue
-            if ad_id in existing_adids or ad_id in seen_adids:
-                skip_adids.add(ad_id)
+            if r['ad_id'] in existing_adids or r['ad_id'] in seen_ads:
+                skip_ads.add(r['ad_id'])
                 continue
+            if not (r['camp'] and r['adset'] and r['ad_name']):
+                missing.append(r['ad_id'])
+                continue
+            seen_ads.add(r['ad_id'])
+            src = self._source_for(r['source'], src_cache, self.default_leads_source_id)
+            if self._key(r['camp']) not in camps:
+                new_camps.add(self._key(r['camp']))
+            if (self._key(r['camp']), self._key(r['adset'])) not in adsets:
+                new_adsets.add((self._key(r['camp']), self._key(r['adset'])))
+            if (src.id, self._key(r['ad_name'])) not in srcs:
+                new_srcs.add((src.id, self._key(r['ad_name'])))
+            if len(samples) < 5:
+                samples.append(r)
 
-            seen_adids.add(ad_id)
-            if camp_name:  seen_camps.add(camp_name)
-            if adset_name: seen_adsets.add(adset_name)
-            if ad_name:    seen_srccamps.add(ad_name)
-
-        # Count what's new
-        existing_camps    = set(Camp.search([]).mapped('name'))
-        existing_adsets   = set(Adset.search([]).mapped('name'))
-        existing_srccamps = set(SrcCamp.search([]).mapped('name'))
-
-        new_camps    = seen_camps    - existing_camps
-        new_adsets   = seen_adsets   - existing_adsets
-        new_srccamps = seen_srccamps - existing_srccamps
-
-        self.rows_total       = len(rows)
-        self.campaigns_new    = len(new_camps)
-        self.adsets_new       = len(new_adsets)
-        self.source_camps_new = len(new_srccamps)
-        self.ads_new          = len(seen_adids)
-        self.ads_skip         = len(skip_adids)
-
+        self.rows_total = len(rows)
+        self.campaigns_new = len(new_camps)
+        self.adsets_new = len(new_adsets)
+        self.source_camps_new = len(new_srcs)
+        self.ads_new = len(seen_ads)
+        self.ads_skip = len(skip_ads)
         lines = [
             f'Total rows in file:          {len(rows)}',
-            f'Ad IDs to import:            {len(seen_adids)}',
-            f'Duplicate Ad IDs (skip):     {len(skip_adids)}',
+            f'Ad IDs to import:            {len(seen_ads)}',
+            f'Already imported (skip):     {len(skip_ads)}',
+            f'Rows missing Campaign / Ad Set / Source Campaign: {len(missing)}',
             '',
             f'New Meta Campaigns:          {len(new_camps)}',
             f'New Meta Ad Sets:            {len(new_adsets)}',
-            f'New Source Campaigns (Odoo): {len(new_srccamps)}',
+            f'New Source Campaigns (Odoo): {len(new_srcs)}',
             '',
-            '--- Sample (first 5 rows) ---',
+            'Names are matched ignoring upper/lower case and extra spaces.',
+            'If the same name already exists several times, the oldest one is used.',
+            '', '--- Sample (first 5 rows) ---',
         ]
-        for row in rows[:5]:
-            camp  = self._get_col(row, 'Campaign name', 'campaign_name', 'Campaign')
-            adset = self._get_col(row, 'Ad set name', 'adset_name', 'Ad set')
-            adnm  = self._get_col(row, 'Ad name', 'ad_name', 'Ad Name')
-            adid  = self._get_col(row, 'Ad ID', 'ad_id', 'Ad Id')
-            lines.append(f'  [{adid}]')
-            lines.append(f'    Campaign:        {camp}')
-            lines.append(f'    Ad Set:          {adset}')
-            lines.append(f'    Source Campaign: {adnm}')
-
+        for r in samples:
+            lines += [f"  [{r['ad_id']}]", f"    Campaign:        {r['camp']}", f"    Ad Set:          {r['adset']}",
+                      f"    Source Campaign: {r['ad_name']}", f"    Lead Source:     {r['source'] or '(default)'}"]
         self.preview_text = '\n'.join(lines)
         self.state = 'preview'
         return self._reopen()
@@ -194,82 +230,61 @@ class AdExcelImportWizard(models.TransientModel):
     def action_import(self):
         self.ensure_one()
         rows = self._parse_file()
+        Camp, Adset = self.env['otm.sm.meta.campaign'], self.env['otm.sm.meta.adset']
+        SrcCamp, AdMap = self.env['lead.source.campaign'], self.env['otm.sm.ad.mapping']
+        default_src = self.default_leads_source_id
 
-        Camp     = self.env['otm.sm.meta.campaign']
-        Adset    = self.env['otm.sm.meta.adset']
-        SrcCamp  = self.env['lead.source.campaign']
-        AdMap    = self.env['otm.sm.ad.mapping']
-        src_lead = self.default_leads_source_id
+        existing_adids = set(AdMap.with_context(active_test=False).search([]).mapped('ad_id'))
+        # oldest record wins when the database already holds duplicate names
+        camp_cache, adset_cache, src_cache, srcamp_cache = {}, {}, {}, {}
+        for c in Camp.with_context(active_test=False).search([], order='id desc'):
+            camp_cache[self._key(c.name)] = c
+        for a in Adset.with_context(active_test=False).search([], order='id desc'):
+            adset_cache[(a.campaign_id.id, self._key(a.name))] = a
+        for sc in SrcCamp.with_context(active_test=False).search([], order='id desc'):
+            srcamp_cache[(sc.lead_source_id.id, self._key(sc.name))] = sc
 
-        existing_adids = set(AdMap.search([]).mapped('ad_id'))
-
-        # Caches
-        camp_cache   = {c.name: c for c in Camp.search([])}
-        adset_cache  = {'%s::%s' % (a.campaign_id.id, a.name): a for a in Adset.search([])}
-        srcamp_cache = {s.name: s for s in SrcCamp.search([('lead_source_id', '=', src_lead.id)])}
-
-        created = skipped = errors = 0
+        created = skipped = 0
         error_lines = []
-
         for row in rows:
-            camp_name  = self._get_col(row, 'Campaign name', 'campaign_name', 'Campaign')
-            adset_name = self._get_col(row, 'Ad set name', 'adset_name', 'Ad set')
-            ad_name    = self._get_col(row, 'Ad name', 'ad_name', 'Ad Name')
-            ad_id      = self._get_col(row, 'Ad ID', 'ad_id', 'Ad Id')
-
-            if not ad_id:
+            r = self._norm_row(row)
+            if not r['ad_id']:
                 continue
-            if ad_id in existing_adids:
+            if r['ad_id'] in existing_adids:
                 skipped += 1
                 continue
-
+            if not (r['camp'] and r['adset'] and r['ad_name']):
+                error_lines.append(f"❌ Ad ID {r['ad_id']}: Campaign, Ad Set and Source Campaign are all required.")
+                continue
             try:
                 with self.env.cr.savepoint():
-                    # 1. Get/create Meta Campaign
-                    if camp_name not in camp_cache:
-                        camp_cache[camp_name] = Camp.create({'name': camp_name})
-                    campaign = camp_cache[camp_name]
-
-                    # 2. Get/create Meta Ad Set (scoped to campaign)
-                    adset_key = f'{campaign.id}::{adset_name}'
-                    if adset_key not in adset_cache:
-                        adset_cache[adset_key] = Adset.create({
-                            'name': adset_name,
-                            'campaign_id': campaign.id,
-                        })
-                    adset = adset_cache[adset_key]
-
-                    # 3. Get/create Source Campaign (Ad name → lead.source.campaign)
-                    if ad_name not in srcamp_cache:
-                        existing_sc = SrcCamp.search([('name', '=', ad_name), ('lead_source_id', '=', src_lead.id)], limit=1)
-                        srcamp_cache[ad_name] = existing_sc or SrcCamp.create({
-                            'name': ad_name,
-                            'lead_source_id': src_lead.id,
-                        })
-                    source_campaign = srcamp_cache[ad_name]
-
-                    # 4. Create Ad Mapping
+                    src = self._source_for(r['source'], src_cache, default_src)
+                    ck = self._key(r['camp'])
+                    if ck not in camp_cache:
+                        camp_cache[ck] = Camp.create({'name': r['camp']})
+                    campaign = camp_cache[ck]
+                    ak = (campaign.id, self._key(r['adset']))
+                    if ak not in adset_cache:
+                        adset_cache[ak] = Adset.create({'name': r['adset'], 'campaign_id': campaign.id})
+                    adset = adset_cache[ak]
+                    sk = (src.id, self._key(r['ad_name']))
+                    if sk not in srcamp_cache:
+                        srcamp_cache[sk] = SrcCamp.create({'name': r['ad_name'], 'lead_source_id': src.id})
                     AdMap.create({
-                        'adset_id':           adset.id,
-                        'ad_id':              ad_id,
-                        'source_campaign_id': source_campaign.id,
+                        'adset_id': adset.id, 'ad_id': r['ad_id'],
+                        'source_campaign_id': srcamp_cache[sk].id, 'active': r['active'],
                     })
-                    existing_adids.add(ad_id)
+                    existing_adids.add(r['ad_id'])
                     created += 1
+            except Exception as e:  # noqa: BLE001 - keep importing the other rows
+                error_lines.append(f"❌ Ad ID {r['ad_id']}: {e}")
+                _logger.error('Excel import error for ad_id %s: %s', r['ad_id'], e)
 
-            except Exception as e:
-                errors += 1
-                error_lines.append(f'❌ Ad ID {ad_id}: {e}')
-                _logger.error('Excel import error for ad_id %s: %s', ad_id, e)
-
-        result = [
-            f'✅ Created:          {created}',
-            f'⚠️  Skipped (dup):   {skipped}',
-            f'❌ Errors:           {errors}',
-        ]
+        result = [f'✅ Created:          {created}',
+                  f'⚠️  Skipped (already imported): {skipped}',
+                  f'❌ Errors:           {len(error_lines)}']
         if error_lines:
-            result += ['', '--- Errors ---'] + error_lines[:20]
-
+            result += ['', '--- Errors ---'] + error_lines[:50]
         self.result_text = '\n'.join(result)
         self.state = 'done'
         return self._reopen()

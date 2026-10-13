@@ -21,6 +21,9 @@ access_otm_sm_column_mapping_ads_manager,otm.sm.column.mapping ads manager,model
 access_otm_sm_sync_log_ads_manager,otm.sm.sync.log ads manager,model_otm_sm_sync_log,group_ads_manager,1,1,1,1
 access_otm_sm_sync_row_ads_manager,otm.sm.sync.row ads manager,model_otm_sm_sync_row,group_ads_manager,1,1,1,1
 access_otm_sm_test_connection_wizard_ads_manager,otm.sm.test.connection.wizard ads manager,model_otm_sm_test_connection_wizard,group_ads_manager,1,1,1,1
-access_otm_sm_meta_campaign_ads_manager,otm.sm.meta.campaign ads manager,model_otm_sm_meta_campaign,group_ads_manager,1,0,0,0
-access_otm_sm_meta_adset_ads_manager,otm.sm.meta.adset ads manager,model_otm_sm_meta_adset,group_ads_manager,1,0,0,0
-access_otm_sm_ad_mapping_ads_manager,otm.sm.ad.mapping ads manager,model_otm_sm_ad_mapping,group_ads_manager,1,0,0,0
+access_otm_sm_meta_campaign_ads_manager,otm.sm.meta.campaign ads manager,model_otm_sm_meta_campaign,group_ads_manager,1,1,1,1
+access_otm_sm_meta_adset_ads_manager,otm.sm.meta.adset ads manager,model_otm_sm_meta_adset,group_ads_manager,1,1,1,1
+access_otm_sm_ad_mapping_ads_manager,otm.sm.ad.mapping ads manager,model_otm_sm_ad_mapping,group_ads_manager,1,1,1,1
+access_otm_sm_bulk_ad_wizard_ads_manager,otm.sm.bulk.ad.wizard ads manager,model_otm_sm_bulk_ad_wizard,group_ads_manager,1,1,1,1
+access_otm_sm_bulk_ad_wizard_line_ads_manager,otm.sm.bulk.ad.wizard.line ads manager,model_otm_sm_bulk_ad_wizard_line,group_ads_manager,1,1,1,1
+access_otm_sm_excel_import_wizard_ads_manager,otm.sm.excel.import.wizard ads manager,model_otm_sm_excel_import_wizard,group_ads_manager,1,1,1,1

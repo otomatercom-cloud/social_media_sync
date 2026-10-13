@@ -20,35 +20,35 @@
     <menuitem id="menu_ads_manager_meta_root"
               name="Meta Ad Mapping"
               parent="menu_ads_manager_root"
-              groups="base.group_system"
+              groups="group_ads_manager,base.group_system"
               sequence="20"/>
 
     <menuitem id="menu_ads_manager_meta_campaign"
               name="Campaigns"
               parent="menu_ads_manager_meta_root"
               action="action_meta_campaign"
-              groups="base.group_system"
+              groups="group_ads_manager,base.group_system"
               sequence="10"/>
 
     <menuitem id="menu_ads_manager_meta_adset"
               name="Ad Sets"
               parent="menu_ads_manager_meta_root"
               action="action_meta_adset"
-              groups="base.group_system"
+              groups="group_ads_manager,base.group_system"
               sequence="20"/>
 
     <menuitem id="menu_ads_manager_ad_mapping"
               name="Ads (Ad IDs)"
               parent="menu_ads_manager_meta_root"
               action="action_otm_sm_ad_mapping"
-              groups="base.group_system"
+              groups="group_ads_manager,base.group_system"
               sequence="30"/>
 
     <menuitem id="menu_ads_manager_import"
               name="Import Ad IDs from Excel"
               parent="menu_ads_manager_meta_root"
               action="social_media_sync.action_ad_excel_import_menu"
-              groups="base.group_system"
+              groups="group_ads_manager,base.group_system"
               sequence="40"/>
 
     <!-- Sheet Configurations: Admin only -->

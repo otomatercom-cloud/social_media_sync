@@ -5,7 +5,7 @@
     <menuitem id="menu_ads_manager_root"
               name="Social Media Sync"
               sequence="50"
-              groups="custom_leads_19.group_lead_team_lead,base.group_system"
+              groups="custom_leads_19.group_lead_team_lead,group_ads_manager,base.group_system"
               web_icon="social_media_sync,static/description/icon.png"/>
 
     <!-- Dashboard: Team Lead + Admin -->
@@ -13,7 +13,7 @@
               name="Dashboard"
               parent="menu_ads_manager_root"
               action="action_otm_sm_dashboard"
-              groups="custom_leads_19.group_lead_team_lead,base.group_system"
+              groups="custom_leads_19.group_lead_team_lead,group_ads_manager,base.group_system"
               sequence="10"/>
 
     <!-- Meta Ad Mapping: Admin only -->
@@ -56,7 +56,7 @@
               name="Sheet Configurations"
               parent="menu_ads_manager_root"
               action="action_otm_sm_sheet_config"
-              groups="base.group_system"
+              groups="group_ads_manager,base.group_system"
               sequence="30"/>
 
     <!-- Sync History: Admin only -->
@@ -64,7 +64,7 @@
               name="Sync Logs (24h)"
               parent="menu_ads_manager_root"
               action="action_otm_sm_sync_log"
-              groups="base.group_system"
+              groups="group_ads_manager,base.group_system"
               sequence="40"/>
 
 </odoo>

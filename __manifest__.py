@@ -1,6 +1,6 @@
 {
     'name': 'Social Media Sync',
-    'version': '19.0.1.0.2',
+    'version': '19.0.1.0.3',
     'summary': 'Google Sheet lead sync (new rows only) with Meta Ad ID to Source Campaign mapping and dashboard',
     'description': """
 Social Media Sync
@@ -18,6 +18,7 @@ Social Media Sync
     'license': 'OPL-1',
     'depends': ['custom_leads_19'],
     'data': [
+        'security/security.xml',
         'security/ir.model.access.csv',
         'data/cron.xml',
         'views/ad_mapping_views.xml',

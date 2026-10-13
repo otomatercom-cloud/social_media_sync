@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="privilege_social_media_sync" model="res.groups.privilege">
+        <field name="name">Social Media Sync</field>
+        <field name="category_id" ref="base.module_category_marketing"/>
+    </record>
+
+    <!-- Ads Manager: can fully edit Sheet Configurations (+ column mappings, logs, sync tracker) -->
+    <record id="group_ads_manager" model="res.groups">
+        <field name="name">Ads Manager</field>
+        <field name="privilege_id" ref="privilege_social_media_sync"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user')), (4, ref('custom_leads_19.group_lead_team_lead'))]"/>
+    </record>
+
+</odoo>

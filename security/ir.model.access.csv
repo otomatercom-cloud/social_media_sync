@@ -16,3 +16,11 @@ access_otm_sm_test_connection_wizard_admin,otm.sm.test.connection.wizard admin,m
 access_otm_sm_bulk_ad_wizard_admin,otm.sm.bulk.ad.wizard admin,model_otm_sm_bulk_ad_wizard,base.group_system,1,1,1,1
 access_otm_sm_bulk_ad_wizard_line_admin,otm.sm.bulk.ad.wizard.line admin,model_otm_sm_bulk_ad_wizard_line,base.group_system,1,1,1,1
 access_otm_sm_excel_import_wizard_admin,otm.sm.excel.import.wizard admin,model_otm_sm_excel_import_wizard,base.group_system,1,1,1,1
+access_otm_sm_sheet_config_ads_manager,otm.sm.sheet.config ads manager,model_otm_sm_sheet_config,group_ads_manager,1,1,1,1
+access_otm_sm_column_mapping_ads_manager,otm.sm.column.mapping ads manager,model_otm_sm_column_mapping,group_ads_manager,1,1,1,1
+access_otm_sm_sync_log_ads_manager,otm.sm.sync.log ads manager,model_otm_sm_sync_log,group_ads_manager,1,1,1,1
+access_otm_sm_sync_row_ads_manager,otm.sm.sync.row ads manager,model_otm_sm_sync_row,group_ads_manager,1,1,1,1
+access_otm_sm_test_connection_wizard_ads_manager,otm.sm.test.connection.wizard ads manager,model_otm_sm_test_connection_wizard,group_ads_manager,1,1,1,1
+access_otm_sm_meta_campaign_ads_manager,otm.sm.meta.campaign ads manager,model_otm_sm_meta_campaign,group_ads_manager,1,0,0,0
+access_otm_sm_meta_adset_ads_manager,otm.sm.meta.adset ads manager,model_otm_sm_meta_adset,group_ads_manager,1,0,0,0
+access_otm_sm_ad_mapping_ads_manager,otm.sm.ad.mapping ads manager,model_otm_sm_ad_mapping,group_ads_manager,1,0,0,0

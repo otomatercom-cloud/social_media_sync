@@ -1,6 +1,6 @@
 {
     'name': 'Social Media Sync',
-    'version': '19.0.1.0.3',
+    'version': '19.0.1.0.4',
     'summary': 'Google Sheet lead sync (new rows only) with Meta Ad ID to Source Campaign mapping and dashboard',
     'description': """
 Social Media Sync
@@ -25,6 +25,7 @@ Social Media Sync
         'views/sheet_config_views.xml',
         'views/sync_log_views.xml',
         'views/dashboard_views.xml',
+        'views/lead_issue_views.xml',
         'views/test_connection_wizard_views.xml',
         'views/bulk_ad_wizard_views.xml',
         'views/excel_import_wizard_views.xml',
@@ -35,6 +36,8 @@ Social Media Sync
             'social_media_sync/static/src/css/dashboard.css',
             'social_media_sync/static/src/xml/dashboard.xml',
             'social_media_sync/static/src/js/dashboard.js',
+            'social_media_sync/static/src/xml/issue_dashboard.xml',
+            'social_media_sync/static/src/js/issue_dashboard.js',
         ],
     },
     'pre_init_hook': 'pre_init_hook',

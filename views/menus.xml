@@ -16,6 +16,14 @@
               groups="custom_leads_19.group_lead_team_lead,group_ads_manager,base.group_system"
               sequence="10"/>
 
+    <!-- Lead Issues dashboard: Team Lead + Ads Manager + Admin -->
+    <menuitem id="menu_ads_manager_lead_issues"
+              name="Lead Issues"
+              parent="menu_ads_manager_root"
+              action="action_otm_sm_issue_dashboard"
+              groups="custom_leads_19.group_lead_team_lead,group_ads_manager,base.group_system"
+              sequence="15"/>
+
     <!-- Meta Ad Mapping: Admin only -->
     <menuitem id="menu_ads_manager_meta_root"
               name="Meta Ad Mapping"

@@ -549,12 +549,17 @@ class OtmSmSheetConfig(models.Model):
             keys = {r[0] for r in cr.fetchall()}
         existing = ex
 
+        issue_vals = []
         for row_no, d, sig in todo:
             was_error = stored.get(row_no, (None, None))[1] == 'error'
+            ctx['row_issues'] = []
             try:
                 with cr.savepoint():
                     res, key, lead_id = self._process_row(d, cmap, ctx, existing, keys, Lead)
                 keys.add(key)
+                if lead_id and ctx['row_issues']:
+                    issue_vals += [dict(iv, config_id=self.id, row_no=row_no, lead_id=lead_id)
+                                   for iv in ctx['row_issues']]
                 out.append((row_no, sig, key, lead_id, res, None))
                 tot['rows'] += 1
                 if res == 'created':
@@ -571,6 +576,23 @@ class OtmSmSheetConfig(models.Model):
                     tot['rows'] += 1
                     if len(errors) < 20:
                         errors.append('Row %s: %s' % (row_no, msg))
+        if issue_vals:
+            try:
+                with cr.savepoint():
+                    self.env['otm.sm.lead.issue'].create(issue_vals)
+            except Exception as e:                       # never break the sync because of the issue log
+                _logger.warning('Could not store lead issues: %s', e)
+
+    def _issue(self, ctx, cmap, field, value, reason):
+        """Remember that a sheet value could not be saved on the lead (stored after the row succeeds)."""
+        fld = self.env['leads.logic']._fields.get(field)
+        ctx.setdefault('row_issues', []).append({
+            'field_name': field,
+            'field_label': (fld.string if fld else field),
+            'sheet_column': (cmap['by_field'].get(field) or {}).get('col', ''),
+            'sheet_value': (value or '')[:200],
+            'reason': reason,
+        })
 
     def _row_key(self, d, cmap, ctx, p10):
         ad = self._safe_cell(d, cmap, 'ad_id_raw')
@@ -619,6 +641,9 @@ class OtmSmSheetConfig(models.Model):
             self._create_reattempt(Lead.browse(lead_id), d, cmap, ctx, phone, src_id, sc_id, dtype)
             return 're_enquiry', key, lead_id
 
+        for m in cmap['list']:
+            if m['col'] in cmap['missing'] and m['field'] != 'phone_number':
+                self._issue(ctx, cmap, m['field'], '', 'Column "%s" not found in the sheet header' % m['col'])
         vals = {
             'name': self._cell(d, cmap, 'name') or 'Unknown',
             'phone_number': phone,
@@ -631,6 +656,8 @@ class OtmSmSheetConfig(models.Model):
             emp = self._employee(ctx, owner)
             if emp:
                 vals['lead_owner'] = emp
+            else:
+                self._issue(ctx, cmap, 'lead_owner', owner, 'No employee with this name')
         vals.update(self._direct_vals(d, cmap, ctx, only=None))
         lead = Lead.create(vals)
         existing[('p', p10)] = lead.id
@@ -648,10 +675,15 @@ class OtmSmSheetConfig(models.Model):
                 continue
             field = self.env['leads.logic']._fields.get(f)
             if not field:
+                if only is None:
+                    self._issue(ctx, cmap, f, v, 'Field does not exist on the lead')
                 continue
             if field.type == 'selection':
+                raw = v
                 v = self._match_selection(ctx, f, v)
                 if not v:
+                    if only is None:
+                        self._issue(ctx, cmap, f, raw, 'Value not in the allowed options')
                     continue
             vals[f] = v
         return vals
@@ -699,6 +731,8 @@ class OtmSmSheetConfig(models.Model):
             c = self.env['course.interested'].search([('name', '=ilike', course)], limit=1)
             if c:
                 vals['course_id'] = [(6, 0, c.ids)]
+            else:
+                self._issue(ctx, cmap, 'course_interested', course, 'Course not found (re-attempt)')
         self.env['otomater.lead.reattempt'].create(vals)
 
     # -- edits: only the changed columns ------------------------------------------------

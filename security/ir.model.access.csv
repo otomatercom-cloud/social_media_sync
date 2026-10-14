@@ -27,3 +27,6 @@ access_otm_sm_ad_mapping_ads_manager,otm.sm.ad.mapping ads manager,model_otm_sm_
 access_otm_sm_bulk_ad_wizard_ads_manager,otm.sm.bulk.ad.wizard ads manager,model_otm_sm_bulk_ad_wizard,group_ads_manager,1,1,1,1
 access_otm_sm_bulk_ad_wizard_line_ads_manager,otm.sm.bulk.ad.wizard.line ads manager,model_otm_sm_bulk_ad_wizard_line,group_ads_manager,1,1,1,1
 access_otm_sm_excel_import_wizard_ads_manager,otm.sm.excel.import.wizard ads manager,model_otm_sm_excel_import_wizard,group_ads_manager,1,1,1,1
+access_otm_sm_lead_issue_admin,otm.sm.lead.issue admin,model_otm_sm_lead_issue,base.group_system,1,1,1,1
+access_otm_sm_lead_issue_tl,otm.sm.lead.issue team lead,model_otm_sm_lead_issue,custom_leads_19.group_lead_team_lead,1,1,0,0
+access_otm_sm_lead_issue_ads_manager,otm.sm.lead.issue ads manager,model_otm_sm_lead_issue,group_ads_manager,1,1,1,1

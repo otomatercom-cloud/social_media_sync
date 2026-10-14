@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+<t t-name="social_media_sync.IssueDashboard">
+<div class="uc_dashboard o_action" t-ref="iss_root">
+
+    <div class="uc_header">
+        <div class="uc_header_left">
+            <span class="uc_logo">⚠️</span>
+            <h2>Lead Issues <small class="text-muted fs-6">— leads created, but some sheet details were not saved</small></h2>
+        </div>
+        <div class="uc_header_right">
+            <select class="form-select form-select-sm" style="width:auto" t-on-change="onConfig">
+                <option value="">All Sheets</option>
+                <t t-foreach="state.data.configs" t-as="c" t-key="c.id">
+                    <option t-att-value="c.id" t-esc="c.name"/>
+                </t>
+            </select>
+            <div class="uc_period_tabs">
+                <button t-att-class="'uc_tab'+(state.status==='open'?' active':'')" t-on-click="() => this.onStatus('open')">Open</button>
+                <button t-att-class="'uc_tab'+(state.status==='resolved'?' active':'')" t-on-click="() => this.onStatus('resolved')">Resolved</button>
+                <button t-att-class="'uc_tab'+(state.status==='all'?' active':'')" t-on-click="() => this.onStatus('all')">All</button>
+            </div>
+            <button class="btn btn-primary btn-sm" t-on-click="refresh">⟳ Refresh</button>
+        </div>
+    </div>
+
+    <t t-if="state.loading">
+        <div class="uc_loading"><div class="spinner-border text-primary"/><p>Loading…</p></div>
+    </t>
+    <t t-else="">
+        <div class="uc_kpi_row">
+            <div class="uc_kpi_card uc_kpi_orange"><div class="uc_kpi_icon">⚠️</div><div class="uc_kpi_body">
+                <div class="uc_kpi_value" t-esc="state.data.kpi.open"/><div class="uc_kpi_label">Open Issues</div></div></div>
+            <div class="uc_kpi_card uc_kpi_blue"><div class="uc_kpi_icon">👤</div><div class="uc_kpi_body">
+                <div class="uc_kpi_value" t-esc="state.data.kpi.leads"/><div class="uc_kpi_label">Leads Affected</div></div></div>
+            <div class="uc_kpi_card uc_kpi_purple"><div class="uc_kpi_icon">🆕</div><div class="uc_kpi_body">
+                <div class="uc_kpi_value" t-esc="state.data.kpi.today"/><div class="uc_kpi_label">New Today</div></div></div>
+            <div class="uc_kpi_card uc_kpi_green"><div class="uc_kpi_icon">✅</div><div class="uc_kpi_body">
+                <div class="uc_kpi_value" t-esc="state.data.kpi.resolved"/><div class="uc_kpi_label">Resolved</div></div></div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <div class="bg-white rounded p-3 shadow-sm h-100">
+                    <div class="fw-bold mb-2">Open issues by field <small class="text-muted">(click to filter)</small></div>
+                    <t t-if="!state.data.by_field.length"><div class="text-muted">No open issues 🎉</div></t>
+                    <t t-foreach="state.data.by_field" t-as="f" t-key="f.key">
+                        <div class="d-flex align-items-center mb-1" style="cursor:pointer" t-on-click="() => this.onField(f.key)">
+                            <div style="width:150px" t-att-class="state.fieldName===f.key ? 'fw-bold text-primary' : ''" t-esc="f.label"/>
+                            <div class="flex-grow-1 mx-2 bg-light rounded" style="height:12px">
+                                <div class="rounded" style="height:12px;background:#f59e0b" t-att-style="'width:'+barWidth(f.count)+'%'"/>
+                            </div>
+                            <div class="fw-bold" t-esc="f.count"/>
+                        </div>
+                    </t>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="bg-white rounded p-3 shadow-sm h-100">
+                    <div class="fw-bold mb-2">Top reasons</div>
+                    <t t-foreach="state.data.by_reason" t-as="r" t-key="r.reason">
+                        <div class="d-flex justify-content-between border-bottom py-1">
+                            <span t-esc="r.reason"/><span class="badge text-bg-warning" t-esc="r.count"/>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded p-3 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="fw-bold">Leads with issues <small class="text-muted">(latest 300)</small></div>
+                <input type="text" class="form-control form-control-sm" style="width:240px"
+                       placeholder="Search lead / value / reason…" t-att-value="state.search" t-on-input="onSearch"/>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead><tr>
+                        <th>Lead</th><th>Phone</th><th>Sheet</th><th>Row</th><th>Field</th>
+                        <th>Sheet Column</th><th>Sheet Value</th><th>Issue</th><th/>
+                    </tr></thead>
+                    <tbody>
+                        <t t-foreach="state.data.rows" t-as="row" t-key="row.id">
+                            <tr>
+                                <td><a href="#" t-on-click.prevent="() => this.openLead(row)" t-esc="row.lead_name"/></td>
+                                <td t-esc="row.phone"/>
+                                <td t-esc="row.config"/>
+                                <td t-esc="row.row_no"/>
+                                <td><span class="badge text-bg-light" t-esc="row.field"/></td>
+                                <td t-esc="row.column"/>
+                                <td t-esc="row.value"/>
+                                <td class="text-danger" t-esc="row.reason"/>
+                                <td class="text-end text-nowrap">
+                                    <button class="btn btn-sm btn-outline-primary me-1" t-on-click="() => this.openLead(row)">Open</button>
+                                    <button t-if="row.state==='open'" class="btn btn-sm btn-outline-success" t-on-click="() => this.resolve(row)">Resolve</button>
+                                    <button t-else="" class="btn btn-sm btn-outline-secondary" t-on-click="() => this.reopen(row)">Reopen</button>
+                                </td>
+                            </tr>
+                        </t>
+                        <tr t-if="!state.data.rows.length"><td colspan="9" class="text-center text-muted py-4">Nothing to show.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </t>
+</div>
+</t>
+</templates>
